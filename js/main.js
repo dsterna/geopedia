@@ -1,9 +1,29 @@
 ﻿// GeoLocation 
 console.log("always here");
+let visitedPageIDs = new Array();
+let x = document.getElementById("demo");
 
-var x = document.getElementById("demo");
 
-
+// create a simple instance
+// by default, it only adds horizontal recognizers
+var myElement = document.getElementById('article');
+var hammertime = new Hammer(myElement);
+let count=0;
+hammertime.on('panleft', function(ev) {
+    if(ev.dist > 100){
+        myElement.style.opacity = 0.8
+    }
+    else if   (ev.dist > 150){
+        myElement.style.opacity = 0.7
+    }
+    else if   (ev.dist > 200){
+        myElement.style.opacity = 0.6
+    }
+    if(ev.isFinal){
+        getLocation();
+    }
+	//
+});
 
 function getLocation() {
     if (navigator.geolocation) {
@@ -61,8 +81,9 @@ function sendToWiki(lat, long) {
     let pageID;
     $.getJSON(URL, function (data) {
         console.log(data)
-        let ary = data.query.geosearch;
-        console.log(ary[0]);
+        
+        let ary = data.query.geosearch.filter(y => !visitedPageIDs.includes(y.pageid));
+        visitedPageIDs.push(ary[0].pageid)
         pageID = ary[0].pageid;
         let newURL = "https://sv.wikipedia.org/w/api.php?action=query&format=json&prop=extracts&exintro&explaintext&origin=*&pageids=" + pageID;
         $.getJSON(newURL, function (data2) {
@@ -73,6 +94,7 @@ function sendToWiki(lat, long) {
             head.innerHTML = page.title;
             text.innerHTML = page.extract;
             responsiveVoice.speak("Du befinner dig " + parseInt(ary[0].dist) + " meter från " + page.title + " . " + page.extract, "Swedish Male");
+            console.log(visitedPageIDs);
         })
     });
 }
