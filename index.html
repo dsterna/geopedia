@@ -1,20 +1,63 @@
-﻿<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8" />
-    <title>App1</title>
-    <link href="css/default.css" rel="stylesheet" />
-</head>
-<body>
-    <div getLocation()>Your location: </div>
+﻿<html>
 
-    <p>Click the button to get your coordinates.</p>
-    <button onclick="getLocation()">Try It</button>
+<head>
+    <meta charset="utf-8">
+    <title>Geopedia</title>
+    <!-- <link href="css/geopedia.css" rel="stylesheet" /> -->
+</head>
+
+<body>
+    <div getlocation()=""></div>
+    <p style="font-size: 26px;">Press start to begin your geoeducational Journey.</p>
+    <button onclick="getLocation()"
+        style="font-size: 20px; box-shadow: rgba(0, 0, 0, 0.3) -2px 1px 10px 0px; color: rgba(23, 23, 23, 0.85);">🔊
+        Start 🔊</button>
     <p id="demo"></p>
-    <input onclick='responsiveVoice.speak("Hej mitt namn är dag Reuterskiöld och jag är bästiiiiiiiiiiiiz", "Swedish Male");' type='button' value='🔊 Play' />
-        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js">
-    </script>
+    <!--  -->
+    <div id='map'></div>
+    <h1 id="heading" data-selected="true" data-label-id="0" style="font-size: 51px;"></h1>
+    <p id="wikiText"></p>
     <script src="js/main.js"></script>
-    <script src='https://code.responsivevoice.org/responsivevoice.js'></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"> </script>
+    <script src="https://code.responsivevoice.org/responsivevoice.js"></script>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.4.0/dist/leaflet.css"
+        integrity="sha512-puBpdR0798OZvTTbP4A8Ix/l+A4dHDD0DGqYW6RQ+9jxkRFclaxxQb/SJAWZfWAkuyeQUytO7+7N4QKrDh+drA=="
+        crossorigin="" />
+    <script src="https://unpkg.com/leaflet@1.4.0/dist/leaflet.js"
+        integrity="sha512-QVftwZFqvtRNi0ZyCtsznlKSWOStnDORoefr1enyq5mVL4tmKB3S/EnC3rRJcxCPavG10IcrVGSmPh6Qw5lwrg=="
+        crossorigin=""></script>
+    <style>
+        #map {
+            height: 60%;
+            width: 100%;
+        }
+    </style>
+    <script>
+        var map = L.map('map').fitWorld();
+        L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw', {
+            maxZoom: 18,
+            attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, ' +
+                '<a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, ' +
+                'Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+            id: 'mapbox.streets'
+        }).addTo(map);
+        function onLocationFound(e) {
+            var radius = e.accuracy / 2;
+            L.marker(e.latlng).addTo(map)
+                .bindPopup("You are within " + radius + " meters from this point").openPopup();
+
+            L.circle(e.latlng, radius).addTo(map);
+        }
+        function onLocationError(e) {
+            alert(e.message);
+        }
+        map.on('locationfound', onLocationFound);
+        map.on('locationerror', onLocationError);
+        map.locate({ setView: true, maxZoom: 16 });
+    </script>
+
 </body>
+
 </html>
