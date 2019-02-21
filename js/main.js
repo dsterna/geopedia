@@ -1,31 +1,21 @@
 ﻿// GeoLocation 
-console.log("always here");
+
 let visitedPageIDs = new Array();
+let numberOfResponses = 2;
 let x = document.getElementById("demo");
-
-
-// create a simple instance
-// by default, it only adds horizontal recognizers
 var myElement = document.getElementById('article');
 var hammertime = new Hammer(myElement);
-let count=0;
-hammertime.on('panleft', function(ev) {
-    if(ev.dist > 100){
-        myElement.style.opacity = 0.8
-    }
-    else if   (ev.dist > 150){
-        myElement.style.opacity = 0.7
-    }
-    else if   (ev.dist > 200){
-        myElement.style.opacity = 0.6
-    }
-    if(ev.isFinal){
+let markers = new Array();
+
+hammertime.on('panleft', function (ev) {
+    if (ev.isFinal) {
         getLocation();
     }
-	//
 });
 
 function getLocation() {
+    document.getElementById("startButton").innerHTML = " 🔊 Next 🔊";
+    document.getElementById("swipeText").hidden = false;
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(showPosition, showError);
     } else {
@@ -33,8 +23,7 @@ function getLocation() {
     }
 }
 function showPosition(position) {
-    x.innerHTML = "Latitude: " + position.coords.latitude +
-        "<br>Longitude: " + position.coords.longitude;
+
     sendToWiki(position.coords.latitude, position.coords.longitude);
 }
 function showError(error) {
@@ -43,7 +32,6 @@ function showError(error) {
             x.innerHTML = "User denied the request for Geolocation, fetching location from IP."
             $.getJSON('https://api.ipify.org?format=json', function (data) {
                 $.getJSON("http://ip-api.com/json/" + data.ip, function (data2) {
-                    console.log(data2.lat, data2.lon)
                     sendToWiki(data2.lat, data2.lon);
                 });
             });
@@ -53,7 +41,6 @@ function showError(error) {
             // Make API call to the GeoIP services
             $.getJSON('https://api.ipify.org?format=json', function (data) {
                 $.getJSON("http://ip-api.com/json/" + data.ip, function (data2) {
-                    console.log(data2.lat, data2.lon)
                     sendToWiki(data2.lat, data2.lon);
 
                 });
@@ -67,34 +54,71 @@ function showError(error) {
             break;
     }
 }
+function mapMarker(lat, lon, pageLat, pageLon) {
 
+    const myCustomColour = '#583470'
+    const markerHtmlStyles = `
+  background-color: ${myCustomColour};
+  width: 2rem;
+  height: 2rem;
+  display: block;
+  opacity: 0.5;
+  left: -1.5rem;
+  top: -1.5rem;
+  position: relative;
+  border-radius: 3rem 3rem 0;
+  transform: rotate(45deg);
+  border: 1px solid #FFFFFF`;
+
+    const icon = L.divIcon({
+        className: "my-custom-pin",
+        iconAnchor: [0, 24],
+        labelAnchor: [-6, 0],
+        popupAnchor: [0, -36],
+        html: `<span style="${markerHtmlStyles}" />`
+    });
+   
+    map.fitBounds([
+        [lat, lon],
+        [pageLat, pageLon]
+    ], { padding: [100, 100] });
+   
+    let LamMarker = new L.marker([pageLat, pageLon], { icon: icon })
+    markers.push(LamMarker);
+    LamMarker.addTo(map);
+   
+ 
+    
+    if (markers.length > 1) {
+        map.removeLayer(markers[0]);
+        markers.shift();
+       
+     }
+ }
 function sendToWiki(lat, long) {
-    console.log(document.getElementById("map"));
-    // let testURL = "https://sv.wikipedia.org/?curid=";
-    let testURL = "https://en.wikipedia.org/w/api.php?action=query&prop=info&inprop=url&pageids="
-
-    //let s= "&gscoord=37.786952%7C-122.399523"
     let coordStrig = "&gscoord=" + lat + "|" + long;
-    let URL = "https://sv.wikipedia.org/w/api.php?action=query&list=geosearch&gsradius=10000&gslimit=10&format=json&origin=*"
-    URL = URL + coordStrig;
-    console.log(URL);
-    let pageID;
+    if (visitedPageIDs.length >= numberOfResponses) {
+        numberOfResponses += 5;
+    }
+    let limitString = "&gslimit=" + numberOfResponses;
+    let URL = "https://sv.wikipedia.org/w/api.php?action=query&list=geosearch&gsradius=10000&format=json&origin=*" + coordStrig + limitString;
+    let pages = new Array();
     $.getJSON(URL, function (data) {
-        console.log(data)
-        
-        let ary = data.query.geosearch.filter(y => !visitedPageIDs.includes(y.pageid));
-        visitedPageIDs.push(ary[0].pageid)
-        pageID = ary[0].pageid;
-        let newURL = "https://sv.wikipedia.org/w/api.php?action=query&format=json&prop=extracts&exintro&explaintext&origin=*&pageids=" + pageID;
+        pages = data.query.geosearch.filter(y => !visitedPageIDs.includes(y.pageid));
+        visitedPageIDs.push(pages[0].pageid)
+
+        mapMarker(lat, long, pages[0].lat, pages[0].lon);
+        let newURL = "https://sv.wikipedia.org/w/api.php?action=query&format=json&prop=extracts&exintro&explaintext&origin=*&pageids=" + pages[0].pageid;
         $.getJSON(newURL, function (data2) {
             let head = document.getElementById("heading");
             let text = document.getElementById("wikiText");
-            let page = data2.query.pages[pageID];
-            console.log(page);
+            let page = data2.query.pages[pages[0].pageid];
             head.innerHTML = page.title;
             text.innerHTML = page.extract;
-            responsiveVoice.speak("Du befinner dig " + parseInt(ary[0].dist) + " meter från " + page.title + " . " + page.extract, "Swedish Male");
-            console.log(visitedPageIDs);
+            responsiveVoice.speak("Du befinner dig " + parseInt(pages[0].dist) + " meter från " + page.title + " . " + page.extract, "Swedish Male");
+
         })
+
     });
+
 }
