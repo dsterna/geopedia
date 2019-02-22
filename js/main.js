@@ -5,7 +5,12 @@ let numberOfResponses = 2;
 let x = document.getElementById("demo");
 var myElement = document.getElementById('article');
 var hammertime = new Hammer(myElement);
+let start = true;
 let markers = new Array();
+responsiveVoice.setDefaultVoice("Swedish Male");
+
+
+
 
 hammertime.on('panleft', function (ev) {
     if (ev.isFinal) {
@@ -13,7 +18,16 @@ hammertime.on('panleft', function (ev) {
     }
 });
 
+function updatePosition() {
+    navigator.geolocation.getCurrentPosition(showPosition2, showError);
+    setTimeout(updatePosition, 5000);
+}
+
 function getLocation() {
+    if (start) {
+        updatePosition();
+        start = false;
+    }
     document.getElementById("startButton").innerHTML = " 🔊 Next 🔊";
     document.getElementById("swipeText").hidden = false;
     if (navigator.geolocation) {
@@ -22,8 +36,17 @@ function getLocation() {
         x.innerHTML = "Geolocation is not supported by this browser.";
     }
 }
-function showPosition(position) {
 
+function showPosition2(position) {
+    positionMarker.setLatLng([position.coords.latitude, position.coords.longitude]);
+    map.closePopup();
+    console.log("changed pos");
+   
+}
+
+
+
+function showPosition(position) {
     sendToWiki(position.coords.latitude, position.coords.longitude);
 }
 function showError(error) {
@@ -96,6 +119,7 @@ function mapMarker(lat, lon, pageLat, pageLon) {
      }
  }
 function sendToWiki(lat, long) {
+
     let coordStrig = "&gscoord=" + lat + "|" + long;
     if (visitedPageIDs.length >= numberOfResponses) {
         numberOfResponses += 5;
@@ -106,7 +130,7 @@ function sendToWiki(lat, long) {
     $.getJSON(URL, function (data) {
         pages = data.query.geosearch.filter(y => !visitedPageIDs.includes(y.pageid));
         visitedPageIDs.push(pages[0].pageid)
-
+        console.log(pages[0].lat, pages[0].lon);
         mapMarker(lat, long, pages[0].lat, pages[0].lon);
         let newURL = "https://sv.wikipedia.org/w/api.php?action=query&format=json&prop=extracts&exintro&explaintext&origin=*&pageids=" + pages[0].pageid;
         $.getJSON(newURL, function (data2) {
@@ -115,6 +139,7 @@ function sendToWiki(lat, long) {
             let page = data2.query.pages[pages[0].pageid];
             head.innerHTML = page.title;
             text.innerHTML = page.extract;
+            
             responsiveVoice.speak("Du befinner dig " + parseInt(pages[0].dist) + " meter från " + page.title + " . " + page.extract, "Swedish Male");
 
         })

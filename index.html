@@ -9,26 +9,28 @@
 <body>
     <div getlocation()=""></div>
     <p style="font-size: 26px; text-align: center;">Start your geoeducational Journey.</p>
-    <div  style="text-align: center; display: block;">
+
+    <div id="swipeText" style="text-align: center; " hidden>or swipe left on the text</div>
+
+
+    <br />
+    <div id='map'></div>
+    <br />
+    <div style="text-align: center; display: block;">
+
         <button id="startButton" onclick="getLocation()"
                 style="font-size: 20px;  box-shadow: rgba(0, 0, 0, 0.3) -2px 1px 10px 0px; color: rgba(23, 23, 23, 0.85);">
             🔊
             Start 🔊
         </button>
-    </div> 
-    <div id="swipeText"style="text-align: center; " hidden>or swipe left on the text</div>
-
-
-    <br />
-    <div id='map'></div>
-
+    </div>
     <br />
     <div id="myElement"></div>
     <div id="article" style="border: 0px solid gray;">
         <h1 id="heading" data-selected="true" data-label-id="0" style="font-size: 30px;"></h1>
         <p id="wikiText"></p>
         <br />
-        <br />
+
 
 
     </div>
@@ -54,19 +56,19 @@
         }
     </style>
     <script>
-
+   
         var map = L.map('map').fitWorld();
-
+        let positionMarker;
         L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw', {
             maxZoom: 18,
             id: 'mapbox.streets'
         }).addTo(map);
         function onLocationFound(e) {
             var radius = e.accuracy / 2;
-            L.marker(e.latlng).addTo(map)
+            var marker = L.marker(e.latlng).addTo(map)
                 .bindPopup("You are here").openPopup();
-
-           // L.circle(e.latlng, radius).addTo(map); balksjdösjdäa jöoajdsoiajösodijaöois djaöoidj öaoijd öaojöd oiashöo a
+            // L.circle(e.latlng, radius).addTo(map); balksjdösjdäa jöoajdsoiajösodijaöois djaöoidj öaoijd öaojöd oiashöo a
+            positionMarker = marker;
         }
         function onLocationError(e) {
             alert(e.message);
